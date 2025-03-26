@@ -8,7 +8,7 @@
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; }
         .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         h1 { text-align: center; }
-        input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+        input, button, textarea { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
         button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
         .episode-list { margin-top: 20px; }
@@ -18,9 +18,14 @@
 <body>
     <div class="container">
         <h1>Gerador de XML de Séries</h1>
+        
         <input type="text" id="serie-name" placeholder="Nome da Série">
         <input type="text" id="episode-name" placeholder="Nome do Episódio">
         <input type="text" id="episode-link" placeholder="Link do Episódio">
+        <input type="text" id="thumbnail" placeholder="URL da Thumbnail">
+        <input type="text" id="fanart" placeholder="URL da Fanart">
+        <textarea id="info" placeholder="Descrição do episódio"></textarea>
+
         <button onclick="addEpisode()">Adicionar Episódio</button>
 
         <div class="episode-list" id="episode-list"></div>
@@ -35,36 +40,51 @@
             const serieName = document.getElementById('serie-name').value;
             const episodeName = document.getElementById('episode-name').value;
             const episodeLink = document.getElementById('episode-link').value;
+            const thumbnail = document.getElementById('thumbnail').value;
+            const fanart = document.getElementById('fanart').value;
+            const info = document.getElementById('info').value;
 
             if (serieName && episodeName && episodeLink) {
-                const episode = { serieName, episodeName, episodeLink };
+                const episode = { serieName, episodeName, episodeLink, thumbnail, fanart, info };
                 episodes.push(episode);
                 updateList();
             } else {
-                alert('Preencha todos os campos!');
+                alert('Preencha pelo menos o nome da série, episódio e link!');
             }
         }
 
         function updateList() {
             const listContainer = document.getElementById('episode-list');
             listContainer.innerHTML = '';
-            episodes.forEach(episode => {
+            episodes.forEach((episode, index) => {
                 const div = document.createElement('div');
                 div.classList.add('episode-item');
-                div.innerHTML = `<strong>${episode.serieName}</strong> - Episódio: ${episode.episodeName} - <a href="${episode.episodeLink}" target="_blank">${episode.episodeLink}</a>`;
+                div.innerHTML = `
+                    <strong>${episode.serieName}</strong> - Episódio: ${episode.episodeName} <br>
+                    <a href="${episode.episodeLink}" target="_blank">${episode.episodeLink}</a><br>
+                    <img src="${episode.thumbnail}" alt="Thumbnail" width="100"><br>
+                    <small>Descrição: ${episode.info || 'Sem descrição'}</small>
+                    <button onclick="removeEpisode(${index})">Remover</button>
+                `;
                 listContainer.appendChild(div);
             });
+        }
+
+        function removeEpisode(index) {
+            episodes.splice(index, 1);
+            updateList();
         }
 
         function generateXML() {
             let xmlContent = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<items>\n';
 
             episodes.forEach(episode => {
-                xmlContent += `  <item>\n    <title>[B]${episode.serieName}[/B] [COLOR yellow](COMPLETO)[/COLOR]</title>\n`;
+                xmlContent += `  <item>\n`;
+                xmlContent += `    <title>[B]${episode.serieName}[/B] [COLOR yellow](COMPLETO)[/COLOR]</title>\n`;
                 xmlContent += `    <link>${episode.episodeLink}</link>\n`;
-                xmlContent += `    <thumbnail></thumbnail>\n`;
-                xmlContent += `    <fanart></fanart>\n`;
-                xmlContent += `    <info></info>\n`;
+                xmlContent += `    <thumbnail>${episode.thumbnail}</thumbnail>\n`;
+                xmlContent += `    <fanart>${episode.fanart}</fanart>\n`;
+                xmlContent += `    <info>${episode.info}</info>\n`;
                 xmlContent += `  </item>\n`;
             });
 
