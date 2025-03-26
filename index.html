@@ -67,9 +67,22 @@
             margin-top: 10px;
             border-radius: 5px;
         }
+        .clear-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: red;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
+    <button class="clear-btn" onclick="limparInformacoes()">X</button>
 
     <div class="container">
         <h2>Gerador de XML</h2>
@@ -95,6 +108,7 @@
         <textarea id="resultadoXML" readonly></textarea>
         
         <button onclick="gerarXML()">📄 Gerar XML</button>
+        <button onclick="copiarXML()">📋 Copiar XML</button>
     </div>
 
     <script>
@@ -152,6 +166,15 @@
             $("#resultadoXML").val(xml);
         }
 
+        function copiarXML() {
+            let resultado = $("#resultadoXML").val();
+            navigator.clipboard.writeText(resultado).then(function() {
+                alert("XML copiado para a área de transferência!");
+            }, function(err) {
+                alert("Erro ao copiar o XML: " + err);
+            });
+        }
+
         function salvarDados() {
             let dados = {
                 titulo: $("#titulo").val(),
@@ -193,10 +216,22 @@
             }
         }
 
+        function limparInformacoes() {
+            localStorage.removeItem("xmlData");
+            $("#titulo").val("");
+            $("#thumbnail").val("");
+            $("#fanart").val("");
+            $("#info").val("");
+            $("#episodios").html("");
+            $("#resultadoXML").val("");
+            contador = 1;
+            carregarDados();
+        }
+
         $(document).ready(function() {
             carregarDados();
         });
     </script>
 
 </body>
-    </html>
+</html>
