@@ -14,9 +14,6 @@
             margin: 0;
             padding: 20px;
         }
-        h2, h3 {
-            color: #ffcc00;
-        }
         .container {
             max-width: 600px;
             margin: auto;
@@ -44,9 +41,6 @@
             border-radius: 5px;
             font-weight: bold;
         }
-        button:hover {
-            background-color: #ffaa00;
-        }
         .episodio {
             display: flex;
             align-items: center;
@@ -56,18 +50,12 @@
             margin: 5px 0;
             border-radius: 5px;
         }
-        .episodio input {
-            flex: 1;
-        }
         .btn-delete {
             background: red;
             color: white;
             padding: 5px 10px;
             font-size: 12px;
             border-radius: 50%;
-        }
-        .btn-delete:hover {
-            background: darkred;
         }
         textarea {
             width: 100%;
@@ -87,17 +75,17 @@
         <h2>Gerador de XML</h2>
         
         <label>Título:</label>
-        <input type="text" id="titulo" placeholder="Nome da Série">
+        <input type="text" id="titulo" placeholder="Nome da Série" oninput="salvarDados()">
         <button onclick="buscarSinopse()">🔍 Buscar Sinopse</button>
         
         <label>Thumbnail:</label>
-        <input type="text" id="thumbnail" placeholder="URL da Thumbnail">
+        <input type="text" id="thumbnail" placeholder="URL da Thumbnail" oninput="salvarDados()">
 
         <label>Fanart:</label>
-        <input type="text" id="fanart" placeholder="URL da Fanart">
+        <input type="text" id="fanart" placeholder="URL da Fanart" oninput="salvarDados()">
 
         <label>Info:</label>
-        <input type="text" id="info" placeholder="Informação adicional">
+        <input type="text" id="info" placeholder="Informação adicional" oninput="salvarDados()">
 
         <h3>Episódios</h3>
         <div id="episodios"></div>
@@ -110,20 +98,22 @@
     </div>
 
     <script>
-        let contador = 1; // Para numerar os episódios
+        let contador = 1;
 
-        function adicionarEpisodio() {
+        function adicionarEpisodio(url = "") {
+            let id = contador++;
             $("#episodios").append(`
-                <div class="episodio" id="ep${contador}">
-                    <input type="text" class="link" placeholder="URL do Episódio">
-                    <button class="btn-delete" onclick="removerEpisodio(${contador})">X</button>
+                <div class="episodio" id="ep${id}">
+                    <input type="text" class="link" placeholder="URL do Episódio" value="${url}" oninput="salvarDados()">
+                    <button class="btn-delete" onclick="removerEpisodio(${id})">X</button>
                 </div>
             `);
-            contador++;
+            salvarDados();
         }
 
         function removerEpisodio(id) {
             $("#ep" + id).remove();
+            salvarDados();
         }
 
         function buscarSinopse() {
@@ -134,6 +124,7 @@
                 if (data.results.length > 0) {
                     let sinopse = data.results[0].overview;
                     $("#info").val(`[COLOR yellow]Sinopse:[/COLOR] ${sinopse}`);
+                    salvarDados();
                 } else {
                     $("#info").val("[COLOR yellow]Sinopse:[/COLOR] Não encontrada.");
                 }
@@ -160,7 +151,52 @@
 
             $("#resultadoXML").val(xml);
         }
+
+        function salvarDados() {
+            let dados = {
+                titulo: $("#titulo").val(),
+                thumbnail: $("#thumbnail").val(),
+                fanart: $("#fanart").val(),
+                info: $("#info").val(),
+                episodios: []
+            };
+
+            $(".link").each(function() {
+                dados.episodios.push($(this).val());
+            });
+
+            // Salvar no localStorage
+            localStorage.setItem("xmlData", JSON.stringify(dados));
+        }
+
+        function carregarDados() {
+            let dados = localStorage.getItem("xmlData");
+            if (dados) {
+                dados = JSON.parse(dados);
+
+                $("#titulo").val(dados.titulo);
+                $("#thumbnail").val(dados.thumbnail);
+                $("#fanart").val(dados.fanart);
+                $("#info").val(dados.info);
+
+                $("#episodios").html("");
+                contador = 1;
+                dados.episodios.forEach(url => adicionarEpisodio(url));
+                
+                // Limpar campos se dados já estiverem preenchidos
+                if (dados.titulo && dados.thumbnail && dados.fanart && dados.info) {
+                    $("#titulo").prop("disabled", true);
+                    $("#thumbnail").prop("disabled", true);
+                    $("#fanart").prop("disabled", true);
+                    $("#info").prop("disabled", true);
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            carregarDados();
+        });
     </script>
 
 </body>
-            </html>
+    </html>
