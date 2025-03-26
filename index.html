@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de XML de Séries</title>
+    <title>Gerador de XML de Séries BluePlay</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; }
         .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
@@ -12,12 +12,13 @@
         button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
         .episode-list { margin-top: 20px; }
-        .episode-item { padding: 10px; background-color: #f9f9f9; margin: 5px 0; border-radius: 5px; }
+        .episode-item { padding: 10px; background-color: #f9f9f9; margin: 5px 0; border-radius: 5px; position: relative; }
+        .delete-btn { background-color: red; color: white; border: none; padding: 5px; cursor: pointer; position: absolute; right: 10px; top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Gerador de XML de Séries</h1>
+        <h1>Gerador de XML de Séries BluePlay</h1>
         
         <input type="text" id="serie-name" placeholder="Nome da Série">
         <input type="text" id="episode-name" placeholder="Nome do Episódio">
@@ -34,7 +35,11 @@
     </div>
 
     <script>
-        let episodes = [];
+        let episodes = JSON.parse(localStorage.getItem('episodes')) || [];
+
+        function saveEpisodes() {
+            localStorage.setItem('episodes', JSON.stringify(episodes));
+        }
 
         function addEpisode() {
             const serieName = document.getElementById('serie-name').value;
@@ -47,6 +52,7 @@
             if (serieName && episodeName && episodeLink) {
                 const episode = { serieName, episodeName, episodeLink, thumbnail, fanart, info };
                 episodes.push(episode);
+                saveEpisodes();
                 updateList();
             } else {
                 alert('Preencha pelo menos o nome da série, episódio e link!');
@@ -64,7 +70,7 @@
                     <a href="${episode.episodeLink}" target="_blank">${episode.episodeLink}</a><br>
                     <img src="${episode.thumbnail}" alt="Thumbnail" width="100"><br>
                     <small>Descrição: ${episode.info || 'Sem descrição'}</small>
-                    <button onclick="removeEpisode(${index})">Remover</button>
+                    <button class="delete-btn" onclick="removeEpisode(${index})">X</button>
                 `;
                 listContainer.appendChild(div);
             });
@@ -72,6 +78,7 @@
 
         function removeEpisode(index) {
             episodes.splice(index, 1);
+            saveEpisodes();
             updateList();
         }
 
@@ -96,6 +103,8 @@
             link.download = 'series.xml';
             link.click();
         }
+
+        window.onload = updateList;
     </script>
 </body>
 </html>
