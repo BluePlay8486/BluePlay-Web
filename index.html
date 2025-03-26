@@ -32,8 +32,8 @@
             color: white;
         }
         button {
-            background-color: #ffcc00;
-            color: #222;
+            background-color: #ff8800; /* Fundo Laranja */
+            color: #222; /* Texto Preto */
             border: none;
             padding: 10px 15px;
             margin: 5px;
@@ -89,7 +89,7 @@
         
         <label>Título:</label>
         <input type="text" id="titulo" placeholder="Nome da Série" oninput="salvarDados()">
-        <button onclick="buscarSinopse()">🔍 Buscar Sinopse</button>
+        <button onclick="buscarSinopse()">🔎 Buscar TMDb</button>
         
         <label>Thumbnail:</label>
         <input type="text" id="thumbnail" placeholder="URL da Thumbnail" oninput="salvarDados()">
@@ -136,8 +136,15 @@
 
             $.get(`https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&language=pt-BR&query=${titulo}`, function(data) {
                 if (data.results.length > 0) {
-                    let sinopse = data.results[0].overview;
+                    let serie = data.results[0];
+                    let sinopse = serie.overview;
+                    let thumbnail = `https://image.tmdb.org/t/p/w500${serie.poster_path}`;
+                    let fanart = `https://image.tmdb.org/t/p/original${serie.backdrop_path}`;
+
                     $("#info").val(`[COLOR yellow]Sinopse:[/COLOR] ${sinopse}`);
+                    $("#thumbnail").val(thumbnail);
+                    $("#fanart").val(fanart);
+
                     salvarDados();
                 } else {
                     $("#info").val("[COLOR yellow]Sinopse:[/COLOR] Não encontrada.");
@@ -175,61 +182,23 @@
             });
         }
 
-        function salvarDados() {
-            let dados = {
-                titulo: $("#titulo").val(),
-                thumbnail: $("#thumbnail").val(),
-                fanart: $("#fanart").val(),
-                info: $("#info").val(),
-                episodios: []
-            };
-
-            $(".link").each(function() {
-                dados.episodios.push($(this).val());
-            });
-
-            // Salvar no localStorage
-            localStorage.setItem("xmlData", JSON.stringify(dados));
+        function limparInformacoes() {
+            localStorage.removeItem("xmlData");
+            $("#titulo, #thumbnail, #fanart, #info, #resultadoXML").val("");
+            $("#episodios").html("");
+            contador = 1;
         }
 
-        function carregarDados() {
+        $(document).ready(function() {
             let dados = localStorage.getItem("xmlData");
             if (dados) {
                 dados = JSON.parse(dados);
-
                 $("#titulo").val(dados.titulo);
                 $("#thumbnail").val(dados.thumbnail);
                 $("#fanart").val(dados.fanart);
                 $("#info").val(dados.info);
-
-                $("#episodios").html("");
-                contador = 1;
                 dados.episodios.forEach(url => adicionarEpisodio(url));
-                
-                // Limpar campos se dados já estiverem preenchidos
-                if (dados.titulo && dados.thumbnail && dados.fanart && dados.info) {
-                    $("#titulo").prop("disabled", true);
-                    $("#thumbnail").prop("disabled", true);
-                    $("#fanart").prop("disabled", true);
-                    $("#info").prop("disabled", true);
-                }
             }
-        }
-
-        function limparInformacoes() {
-            localStorage.removeItem("xmlData");
-            $("#titulo").val("");
-            $("#thumbnail").val("");
-            $("#fanart").val("");
-            $("#info").val("");
-            $("#episodios").html("");
-            $("#resultadoXML").val("");
-            contador = 1;
-            carregarDados();
-        }
-
-        $(document).ready(function() {
-            carregarDados();
         });
     </script>
 
