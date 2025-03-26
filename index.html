@@ -1,134 +1,99 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de XML de Séries</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; }
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; }
-        input, button, textarea { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        .episode-list { margin-top: 20px; }
-        .episode-item { padding: 10px; background-color: #f9f9f9; margin: 5px 0; border-radius: 5px; position: relative; }
-        .delete-btn { background-color: red; color: white; border: none; padding: 5px; cursor: pointer; position: absolute; right: 10px; top: 10px; font-size: 12px; width: 25px; height: 25px; border-radius: 50%; }
-        .add-btn { background-color: blue; color: white; border: none; padding: 5px; cursor: pointer; font-size: 12px; border-radius: 3px; margin-top: 5px; }
-        .link-list { margin-top: 5px; }
-    </style>
+    <title>Gerador de XML</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Gerador de XML de Séries</h1>
-        
-        <input type="text" id="serie-name" placeholder="Nome da Série">
-        <input type="text" id="thumbnail" placeholder="URL da Thumbnail">
-        <input type="text" id="fanart" placeholder="URL da Fanart">
-        <textarea id="info" placeholder="Descrição"></textarea>
 
-        <button onclick="addSeries()">Adicionar Série</button>
+    <h2>Gerador de XML</h2>
+    
+    <label>Título:</label>
+    <input type="text" id="titulo" placeholder="Nome da Série">
+    <button onclick="buscarSinopse()">Buscar Sinopse</button>
+    
+    <br><br>
 
-        <div class="episode-list" id="episode-list"></div>
+    <label>Thumbnail:</label>
+    <input type="text" id="thumbnail" placeholder="URL da Thumbnail">
 
-        <button onclick="generateXML()">Gerar XML</button>
-    </div>
+    <br><br>
+
+    <label>Fanart:</label>
+    <input type="text" id="fanart" placeholder="URL da Fanart">
+
+    <br><br>
+
+    <label>Info:</label>
+    <input type="text" id="info" placeholder="Informação adicional">
+
+    <br><br>
+
+    <h3>Episódios</h3>
+    <div id="episodios"></div>
+    <button onclick="adicionarEpisodio()">+ Adicionar Episódio</button>
+
+    <br><br>
+
+    <button onclick="gerarXML()">Gerar XML</button>
+    
+    <h3>Resultado XML:</h3>
+    <textarea id="resultadoXML" rows="10" cols="80"></textarea>
 
     <script>
-        let series = JSON.parse(localStorage.getItem('series')) || [];
+        let contador = 1; // Para numerar os episódios
 
-        function saveSeries() {
-            localStorage.setItem('series', JSON.stringify(series));
+        function adicionarEpisodio() {
+            $("#episodios").append(`
+                <div class="episodio" id="ep${contador}">
+                    <input type="text" class="link" placeholder="URL do Episódio">
+                    <button onclick="removerEpisodio(${contador})">X</button>
+                </div>
+            `);
+            contador++;
         }
 
-        function addSeries() {
-            const serieName = document.getElementById('serie-name').value;
-            const thumbnail = document.getElementById('thumbnail').value;
-            const fanart = document.getElementById('fanart').value;
-            const info = document.getElementById('info').value;
-
-            if (serieName) {
-                const serie = { serieName, thumbnail, fanart, info, episodes: [] };
-                series.push(serie);
-                saveSeries();
-                updateList();
-            } else {
-                alert('Preencha o nome da série!');
-            }
+        function removerEpisodio(id) {
+            $("#ep" + id).remove();
         }
 
-        function addEpisode(index) {
-            const episodeNumber = series[index].episodes.length + 1;
-            const episodeLink = prompt('Cole o link do episódio:');
-            if (episodeLink) {
-                const formattedLink = `${episodeLink}$$lsname=[COLOR white]EPISÓDIO ${episodeNumber}[/COLOR]`;
-                series[index].episodes.push(formattedLink);
-                saveSeries();
-                updateList();
-            }
-        }
+        function buscarSinopse() {
+            let titulo = $("#titulo").val();
+            let apiKey = "1fc5f9008cebf466afb65b5a4e0cf5fa";
 
-        function removeSeries(index) {
-            series.splice(index, 1);
-            saveSeries();
-            updateList();
-        }
-
-        function removeEpisode(serieIndex, episodeIndex) {
-            series[serieIndex].episodes.splice(episodeIndex, 1);
-            saveSeries();
-            updateList();
-        }
-
-        function updateList() {
-            const listContainer = document.getElementById('episode-list');
-            listContainer.innerHTML = '';
-            series.forEach((serie, serieIndex) => {
-                const div = document.createElement('div');
-                div.classList.add('episode-item');
-                div.innerHTML = `
-                    <strong>${serie.serieName}</strong><br>
-                    <img src="${serie.thumbnail}" alt="Thumbnail" width="100"><br>
-                    <small>${serie.info || 'Sem descrição'}</small>
-                    <button class="add-btn" onclick="addEpisode(${serieIndex})">+ Adicionar Episódio</button>
-                    <button class="delete-btn" onclick="removeSeries(${serieIndex})">X</button>
-                    <div class="link-list">
-                        ${serie.episodes.map((link, epIndex) => `
-                            <div>
-                                ${link} <button class="delete-btn" onclick="removeEpisode(${serieIndex}, ${epIndex})">X</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                listContainer.appendChild(div);
+            $.get(`https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&language=pt-BR&query=${titulo}`, function(data) {
+                if (data.results.length > 0) {
+                    let sinopse = data.results[0].overview;
+                    $("#info").val(`[COLOR yellow]Sinopse:[/COLOR] ${sinopse}`);
+                } else {
+                    $("#info").val("[COLOR yellow]Sinopse:[/COLOR] Não encontrada.");
+                }
             });
         }
 
-        function generateXML() {
-            let xmlContent = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<items>\n';
+        function gerarXML() {
+            let titulo = $("#titulo").val();
+            let thumbnail = $("#thumbnail").val();
+            let fanart = $("#fanart").val();
+            let info = $("#info").val();
+            let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<items>\n  <item>\n    <title>${titulo}</title>\n`;
 
-            series.forEach(serie => {
-                xmlContent += `  <item>\n`;
-                xmlContent += `    <title>[B]${serie.serieName}[/B] [COLOR yellow](COMPLETO)[/COLOR]</title>\n`;
-                serie.episodes.forEach(link => {
-                    xmlContent += `    <link>${link}</link>\n`;
-                });
-                xmlContent += `    <thumbnail>${serie.thumbnail}</thumbnail>\n`;
-                xmlContent += `    <fanart>${serie.fanart}</fanart>\n`;
-                xmlContent += `    <info>${serie.info}</info>\n`;
-                xmlContent += `  </item>\n`;
+            $(".link").each(function(index) {
+                let url = $(this).val();
+                let epNum = index + 1;
+                xml += `    <link>${url}$$lsname=[COLOR white]EPISÓDIO ${epNum}[/COLOR]</link>\n`;
             });
 
-            xmlContent += '</items>';
+            xml += `    <thumbnail>${thumbnail}</thumbnail>\n`;
+            xml += `    <fanart>${fanart}</fanart>\n`;
+            xml += `    <info>${info}</info>\n`;
+            xml += `  </item>\n</items>`;
 
-            const blob = new Blob([xmlContent], { type: 'application/xml' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'series.xml';
-            link.click();
+            $("#resultadoXML").val(xml);
         }
-
-        window.onload = updateList;
     </script>
+
 </body>
 </html>
