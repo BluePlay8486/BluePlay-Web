@@ -3,116 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BluePlay Pedidos de Filmes e Séries</title>
+  <title>BluePlay - Solicitar Filme ou Série</title>
   <style>
+    /* Estilo CSS */
     body {
       font-family: Arial, sans-serif;
       background-color: #121212;
-      color: #fff;
+      color: white;
+      margin: 0;
+      padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
     }
-    .form-container {
-      background-color: #333;
+
+    .container {
+      background-color: #1e1e1e;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      width: 300px;
     }
+
+    h1 {
+      text-align: center;
+    }
+
     input, button {
-      margin: 10px 0;
-      padding: 10px;
       width: 100%;
-      border-radius: 4px;
+      padding: 10px;
+      margin: 5px 0;
       border: none;
+      border-radius: 5px;
     }
+
     button {
-      background-color: #f76c20;
+      background-color: #ff6600;
       color: white;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #f54700;
+      background-color: #ff4d00;
+    }
+
+    #mensagem {
+      text-align: center;
+      color: red;
+      margin-top: 10px;
     }
   </style>
+  <!-- Importa o SDK do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js"></script>
 </head>
 <body>
 
-<div class="form-container">
-  <h2>Pedido de Filme ou Série</h2>
-  <form id="pedidoForm">
-    <label for="nome">Nome de quem está pedindo:</label>
-    <input type="text" id="nome" required>
+  <div class="container">
+    <h1>Solicite um Filme ou Série</h1>
+    <form id="formulario">
+      <label for="nome">Seu Nome:</label>
+      <input type="text" id="nome" required><br><br>
 
-    <label for="filme">Nome do filme ou série:</label>
-    <input type="text" id="filme" required>
+      <label for="filme">Nome do Filme/Série:</label>
+      <input type="text" id="filme" required><br><br>
 
-    <button type="submit">Enviar Pedido</button>
-  </form>
-</div>
+      <button type="submit" id="enviar">Enviar</button>
+    </form>
+    <div id="mensagem"></div> <!-- Para exibir mensagens de erro ou sucesso -->
+  </div>
 
-<!-- Script do Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-<script type="module">
-  // Importando as funções necessárias do Firebase SDK
-  import { initializeApp } from "firebase/app";
-  import { getDatabase, ref, push } from "firebase/database";
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkmmFDwhkcY6Z4UJMYHPqHrTSPTfvop8s",
+      authDomain: "blueplayweb.firebaseapp.com",
+      databaseURL: "https://blueplayweb-default-rtdb.firebaseio.com",
+      projectId: "blueplayweb",
+      storageBucket: "blueplayweb.firebasestorage.app",
+      messagingSenderId: "1010274882829",
+      appId: "1:1010274882829:web:8188c8a0eb7b02d4d4cc44",
+      measurementId: "G-Q5SDTRY084"
+    };
 
-  // Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyAkmmFDwhkcY6Z4UJMYHPqHrTSPTfvop8s",
-    authDomain: "blueplayweb.firebaseapp.com",
-    databaseURL: "https://blueplayweb-default-rtdb.firebaseio.com",
-    projectId: "blueplayweb",
-    storageBucket: "blueplayweb.firebasestorage.app",
-    messagingSenderId: "1010274882829",
-    appId: "1:1010274882829:web:8188c8a0eb7b02d4d4cc44",
-    measurementId: "G-Q5SDTRY084"
-  };
+    // Inicializa o Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(app);
 
-  // Inicializando o Firebase
-  const app = initializeApp(firebaseConfig);
+    const formulario = document.getElementById('formulario');
+    const mensagem = document.getElementById('mensagem');
 
-  // Inicializando o Realtime Database
-  const database = getDatabase(app);
+    // Função para enviar o formulário
+    formulario.addEventListener('submit', (e) => {
+      e.preventDefault(); // Impede o envio tradicional do formulário
 
-  // Selecionando o formulário e configurando o evento de envio
-  const form = document.getElementById('pedidoForm');
+      const nome = document.getElementById('nome').value;
+      const filme = document.getElementById('filme').value;
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
+      // Verifica se os campos estão preenchidos
+      if (!nome || !filme) {
+        mensagem.innerHTML = 'Todos os campos são obrigatórios.';
+        return;
+      }
 
-    // Coletando os dados do formulário
-    const nome = document.getElementById('nome').value;
-    const filme = document.getElementById('filme').value;
-
-    // Verificando se os campos estão preenchidos
-    if (nome && filme) {
-      // Criando referência para enviar os dados para o Firebase
-      const pedidoRef = ref(database, 'pedidos');
-      
-      // Enviando os dados para o Firebase
-      push(pedidoRef, {
+      // Salva os dados no Firebase
+      const pedidoRef = db.ref('pedidos/' + Date.now());
+      pedidoRef.set({
         nome: nome,
-        filme: filme,
-        timestamp: Date.now()
+        filme: filme
       }).then(() => {
-        // Sucesso
-        alert('Pedido enviado com sucesso!');
-        form.reset();
+        // Exibe mensagem de sucesso
+        mensagem.style.color = 'green';
+        mensagem.innerHTML = 'Pedido enviado com sucesso!';
+        formulario.reset();
       }).catch((error) => {
-        // Erro
-        console.error('Erro ao enviar pedido: ', error);
-        alert('Erro ao enviar pedido. Tente novamente mais tarde.');
+        // Exibe mensagem de erro
+        mensagem.style.color = 'red';
+        mensagem.innerHTML = 'Erro ao enviar o pedido: ' + error.message;
       });
-    } else {
-      alert('Por favor, preencha todos os campos!');
-    }
-  });
-</script>
-
+    });
+  </script>
 </body>
 </html>
