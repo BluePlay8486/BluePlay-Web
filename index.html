@@ -1,219 +1,118 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de XML</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #1e1e1e;
-            color: white;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: #2a2a2a;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
-        }
-        input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-            background: #333;
-            color: white;
-        }
-        button {
-            background-color: #ff8800; /* Fundo Laranja */
-            color: #222; /* Texto Preto */
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        .episodio {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #444;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-        .btn-delete {
-            background: red;
-            color: white;
-            padding: 5px 10px;
-            font-size: 12px;
-            border-radius: 50%;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            background: #222;
-            color: white;
-            border: none;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
-        }
-        .clear-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: red;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BluePlay Pedidos de Filmes e Séries</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .form-container {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    input, button {
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      border-radius: 4px;
+      border: none;
+    }
+    button {
+      background-color: #f76c20;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #f54700;
+    }
+  </style>
 </head>
 <body>
 
-    <button class="clear-btn" onclick="limparInformacoes()">X</button>
+<div class="form-container">
+  <h2>Pedido de Filme ou Série</h2>
+  <form id="pedidoForm">
+    <label for="nome">Nome de quem está pedindo:</label>
+    <input type="text" id="nome" required>
 
-    <div class="container">
+    <label for="filme">Nome do filme ou série:</label>
+    <input type="text" id="filme" required>
 
-        <!-- Barra de Dica -->
-        <div style="background-color: #333; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: left;">
-            <p style="color: yellow; font-weight: bold;">
-                Atenção: Torrente:<br> 
-                plugin://plugin.video.elementum/play?uri=
-            </p>
-            <p style="color: yellow; font-weight: bold;">
-                Atenção: Trailer Use:<br> 
-                plugin://plugin.video.resolverurl_player?url=
-            </p>
-        </div>
+    <button type="submit">Enviar Pedido</button>
+  </form>
+</div>
 
-        <h2>Gerador de XML</h2>
-        
-        <label>Título:</label>
-        <input type="text" id="titulo" placeholder="Nome da Série" oninput="salvarDados()">
-        <button onclick="buscarSinopse()">🔎 Buscar TMDb</button>
-        
-        <label>Thumbnail:</label>
-        <input type="text" id="thumbnail" placeholder="URL da Thumbnail" oninput="salvarDados()">
+<!-- Script do Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+<script type="module">
+  // Importando as funções necessárias do Firebase SDK
+  import { initializeApp } from "firebase/app";
+  import { getDatabase, ref, push } from "firebase/database";
 
-        <label>Fanart:</label>
-        <input type="text" id="fanart" placeholder="URL da Fanart" oninput="salvarDados()">
+  // Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAkmmFDwhkcY6Z4UJMYHPqHrTSPTfvop8s",
+    authDomain: "blueplayweb.firebaseapp.com",
+    databaseURL: "https://blueplayweb-default-rtdb.firebaseio.com",
+    projectId: "blueplayweb",
+    storageBucket: "blueplayweb.firebasestorage.app",
+    messagingSenderId: "1010274882829",
+    appId: "1:1010274882829:web:8188c8a0eb7b02d4d4cc44",
+    measurementId: "G-Q5SDTRY084"
+  };
 
-        <label>Info:</label>
-        <input type="text" id="info" placeholder="Informação adicional" oninput="salvarDados()">
+  // Inicializando o Firebase
+  const app = initializeApp(firebaseConfig);
 
-        <h3>Episódios</h3>
-        <div id="episodios"></div>
-        <button onclick="adicionarEpisodio()">+ Adicionar Episódio</button>
+  // Inicializando o Realtime Database
+  const database = getDatabase(app);
 
-        <h3>Resultado XML:</h3>
-        <textarea id="resultadoXML" readonly></textarea>
-        
-        <button onclick="gerarXML()">📄 Gerar XML</button>
-        <button onclick="copiarXML()">📋 Copiar XML</button>
-    </div>
+  // Selecionando o formulário e configurando o evento de envio
+  const form = document.getElementById('pedidoForm');
 
-    <script>
-        let contador = 1;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-        function adicionarEpisodio(url = "") {
-            let id = contador++;
-            $("#episodios").append(`
-                <div class="episodio" id="ep${id}">
-                    <input type="text" class="link" placeholder="URL do Episódio" value="${url}" oninput="salvarDados()">
-                    <button class="btn-delete" onclick="removerEpisodio(${id})">X</button>
-                </div>
-            `);
-            salvarDados();
-        }
+    // Coletando os dados do formulário
+    const nome = document.getElementById('nome').value;
+    const filme = document.getElementById('filme').value;
 
-        function removerEpisodio(id) {
-            $("#ep" + id).remove();
-            salvarDados();
-        }
-
-        function buscarSinopse() {
-            let titulo = $("#titulo").val();
-            let apiKey = "1fc5f9008cebf466afb65b5a4e0cf5fa";
-
-            $.get(`https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&language=pt-BR&query=${titulo}`, function(data) {
-                if (data.results.length > 0) {
-                    let serie = data.results[0];
-                    let sinopse = serie.overview;
-                    let thumbnail = `https://image.tmdb.org/t/p/w500${serie.poster_path}`;
-                    let fanart = `https://image.tmdb.org/t/p/original${serie.backdrop_path}`;
-
-                    $("#info").val(`[COLOR yellow]Sinopse:[/COLOR] ${sinopse}`);
-                    $("#thumbnail").val(thumbnail);
-                    $("#fanart").val(fanart);
-
-                    salvarDados();
-                } else {
-                    $("#info").val("[COLOR yellow]Sinopse:[/COLOR] Não encontrada.");
-                }
-            });
-        }
-
-        function gerarXML() {
-            let titulo = $("#titulo").val();
-            let thumbnail = $("#thumbnail").val();
-            let fanart = $("#fanart").val();
-            let info = $("#info").val();
-            let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<items>\n  <item>\n    <title>${titulo}</title>\n`;
-
-            $(".link").each(function(index) {
-                let url = $(this).val();
-                let epNum = index + 1;
-                xml += `    <link>${url}$$lsname=[COLOR white]EPISÓDIO ${epNum}[/COLOR]</link>\n`;
-            });
-
-            xml += `    <thumbnail>${thumbnail}</thumbnail>\n`;
-            xml += `    <fanart>${fanart}</fanart>\n`;
-            xml += `    <info>${info}</info>\n`;
-            xml += `  </item>\n</items>`;
-
-            $("#resultadoXML").val(xml);
-        }
-
-        function copiarXML() {
-            let resultado = $("#resultadoXML").val();
-            navigator.clipboard.writeText(resultado).then(function() {
-                alert("XML copiado para a área de transferência!");
-            }, function(err) {
-                alert("Erro ao copiar o XML: " + err);
-            });
-        }
-
-        function limparInformacoes() {
-            localStorage.removeItem("xmlData");
-            $("#titulo, #thumbnail, #fanart, #info, #resultadoXML").val("");
-            $("#episodios").html("");
-            contador = 1;
-        }
-
-        $(document).ready(function() {
-            let dados = localStorage.getItem("xmlData");
-            if (dados) {
-                dados = JSON.parse(dados);
-                $("#titulo").val(dados.titulo);
-                $("#thumbnail").val(dados.thumbnail);
-                $("#fanart").val(dados.fanart);
-                $("#info").val(dados.info);
-                dados.episodios.forEach(url => adicionarEpisodio(url));
-            }
-        });
-    </script>
+    // Verificando se os campos estão preenchidos
+    if (nome && filme) {
+      // Criando referência para enviar os dados para o Firebase
+      const pedidoRef = ref(database, 'pedidos');
+      
+      // Enviando os dados para o Firebase
+      push(pedidoRef, {
+        nome: nome,
+        filme: filme,
+        timestamp: Date.now()
+      }).then(() => {
+        // Sucesso
+        alert('Pedido enviado com sucesso!');
+        form.reset();
+      }).catch((error) => {
+        // Erro
+        console.error('Erro ao enviar pedido: ', error);
+        alert('Erro ao enviar pedido. Tente novamente mais tarde.');
+      });
+    } else {
+      alert('Por favor, preencha todos os campos!');
+    }
+  });
+</script>
 
 </body>
 </html>
